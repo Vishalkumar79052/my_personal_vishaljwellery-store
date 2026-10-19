@@ -1,0 +1,6 @@
+{
+  "name": "Vishal Jewellery Store",
+  "description": "Full-stack e-commerce application with customer storefront, shopping cart, checkout, user account dashboard, and admin management.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
