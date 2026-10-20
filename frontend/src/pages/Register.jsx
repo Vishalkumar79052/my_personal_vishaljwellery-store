@@ -1,11 +1,18 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext.jsx";
+import { Sparkles, ShieldCheck, Lock, ArrowRight } from "../components/icons/LucideIcons.jsx";
 
 const Register = () => {
   const { register } = useAuth();
   const navigate = useNavigate();
-  const [form, setForm] = useState({ name: "", email: "", password: "", confirmPassword: "" });
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    password: "",
+    confirmPassword: "",
+  });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -14,19 +21,19 @@ const Register = () => {
     setError("");
 
     if (form.password.length < 6) {
-      setError("Password must be at least 6 characters long");
+      setError("Password must be at least 6 characters long.");
       return;
     }
 
     if (form.password !== form.confirmPassword) {
-      setError("Passwords do not match");
+      setError("Passwords do not match.");
       return;
     }
 
     setLoading(true);
     try {
-      await register(form.name, form.email, form.password);
-      navigate("/dashboard");
+      await register(form.name, form.email, form.password, form.phone);
+      navigate("/user/dashboard");
     } catch (err) {
       setError(err.response?.data?.message || "Registration failed. Please try again.");
     } finally {
@@ -35,16 +42,35 @@ const Register = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto px-6 py-20">
-      <div className="bg-white rounded-3xl p-8 border border-forest-100 shadow-soft">
-        <h1 className="font-display text-3xl mb-2 text-ink">Create an account</h1>
-        <p className="text-forest-700/70 mb-8 text-sm">
-          Join Vishal Jewellery Store to discover curated collections and track orders.
-        </p>
+    <div className="min-h-[80vh] flex items-center justify-center px-4 sm:px-6 py-16 relative">
+      {/* Background ambient lighting */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gold-400/10 rounded-full blur-3xl pointer-events-none" />
+
+      <div className="w-full max-w-md bg-white rounded-3xl p-8 sm:p-10 border border-stone-200/80 shadow-luxury space-y-6 relative z-10">
+        {/* Monogram Seal */}
+        <div className="text-center space-y-2">
+          <div className="w-12 h-12 rounded-full bg-forest-950 text-amber-300 flex items-center justify-center font-editorial font-bold text-lg border border-amber-300/40 shadow-xs mx-auto">
+            VJ
+          </div>
+          <h1 className="font-editorial text-3xl sm:text-4xl font-bold text-stone-950">
+            Join the Maison
+          </h1>
+          <p className="text-xs text-stone-500">
+            Create your patron profile to track hallmarked acquisitions and enjoy bespoke privileges.
+          </p>
+        </div>
+
+        {error && (
+          <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold text-center">
+            {error}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-forest-800 mb-1.5">Full name</label>
+            <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1.5">
+              Full Name *
+            </label>
             <input
               type="text"
               placeholder="e.g. Priya Sharma"
@@ -57,10 +83,12 @@ const Register = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-forest-800 mb-1.5">Email address</label>
+            <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1.5">
+              Email Address *
+            </label>
             <input
               type="email"
-              placeholder="you@example.com"
+              placeholder="priya@domain.com"
               value={form.email}
               onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
               className="input-field"
@@ -69,47 +97,66 @@ const Register = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-forest-800 mb-1.5">Password</label>
+            <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1.5">
+              Phone Number (Optional)
+            </label>
+            <input
+              type="tel"
+              placeholder="+91 98765 43210"
+              value={form.phone}
+              onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+              className="input-field"
+            />
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1.5">
+              Password (min. 6 characters) *
+            </label>
             <input
               type="password"
-              placeholder="Minimum 6 characters"
+              placeholder="••••••••••••"
               value={form.password}
               onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
               className="input-field"
-              minLength={6}
               required
             />
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-forest-800 mb-1.5">Confirm password</label>
+            <label className="block text-[11px] font-bold text-stone-700 uppercase tracking-wider mb-1.5">
+              Confirm Password *
+            </label>
             <input
               type="password"
-              placeholder="Re-enter your password"
+              placeholder="••••••••••••"
               value={form.confirmPassword}
               onChange={(e) => setForm((f) => ({ ...f, confirmPassword: e.target.value }))}
               className="input-field"
-              minLength={6}
               required
             />
           </div>
 
-          {error && (
-            <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700">
-              {error}
-            </div>
-          )}
-
-          <button type="submit" disabled={loading} className="btn-primary w-full py-3">
-            {loading ? "Creating account…" : "Create Account"}
+          <button
+            type="submit"
+            disabled={loading}
+            className="btn-primary w-full !py-3.5 shadow-gold text-center justify-center mt-2"
+          >
+            <span>{loading ? "Creating Profile…" : "Register as Maison Patron"}</span>
+            <ArrowRight className="w-4 h-4 text-amber-300" />
           </button>
         </form>
 
-        <div className="mt-8 pt-6 border-t border-forest-100 text-center text-sm text-forest-700/70">
-          Already have an account?{" "}
-          <Link to="/login" className="text-forest-800 font-semibold hover:underline">
-            Sign in
+        <div className="pt-4 border-t border-stone-100 text-center text-xs text-stone-500">
+          <span>Already a patron? </span>
+          <Link to="/login" className="font-bold text-forest-950 hover:text-gold-700 hover:underline">
+            Sign In Here
           </Link>
+        </div>
+
+        <div className="flex items-center justify-center gap-1.5 text-[10px] text-stone-400">
+          <ShieldCheck className="w-3 h-3 text-emerald-800" />
+          <span>Privilege Membership · Certified Jewellery Guarantee</span>
         </div>
       </div>
     </div>
