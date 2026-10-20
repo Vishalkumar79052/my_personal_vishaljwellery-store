@@ -97,12 +97,12 @@ const Navbar = () => {
 
           {user ? (
             <div className="flex items-center gap-2.5">
-              {/* ADMIN DASHBOARD LINK (When user is admin) */}
-              {user.role === "admin" && (
+              {/* ADMIN PANEL LINK (When user is admin) */}
+              {user.role === "admin" ? (
                 <Link
                   to="/admin"
                   id="navbar-admin-dashboard-link"
-                  className={`px-3 py-1.5 rounded-full text-xs font-bold inline-flex items-center gap-1.5 transition-all shadow-2xs ${
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-bold inline-flex items-center gap-1.5 transition-all shadow-2xs ${
                     isAdminActive
                       ? "bg-amber-400 text-emerald-950 ring-2 ring-amber-300"
                       : "bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300/80"
@@ -110,25 +110,25 @@ const Navbar = () => {
                   title="Store Administration & Executive Controls"
                 >
                   <ShieldCheck className="w-3.5 h-3.5 text-amber-800" />
-                  <span>Admin Dashboard</span>
+                  <span>Admin Panel</span>
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse" />
                 </Link>
+              ) : (
+                /* CUSTOMER USER DASHBOARD LINK (For customer patrons) */
+                <Link
+                  to="/user/dashboard"
+                  id="navbar-customer-dashboard-link"
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-semibold inline-flex items-center gap-1.5 transition-all ${
+                    isCustomerDashboardActive
+                      ? "bg-emerald-900 text-amber-100 shadow-xs"
+                      : "bg-emerald-50 hover:bg-emerald-100/80 text-emerald-950 border border-emerald-200"
+                  }`}
+                  title="Customer Orders, Wishlist & Addresses"
+                >
+                  <User className="w-3.5 h-3.5 text-emerald-800" />
+                  <span>Customer Dashboard</span>
+                </Link>
               )}
-
-              {/* CUSTOMER USER DASHBOARD LINK (For all authenticated patrons) */}
-              <Link
-                to="/user/dashboard"
-                id="navbar-customer-dashboard-link"
-                className={`px-3.5 py-1.5 rounded-full text-xs font-semibold inline-flex items-center gap-1.5 transition-all ${
-                  isCustomerDashboardActive
-                    ? "bg-emerald-900 text-amber-100 shadow-xs"
-                    : "bg-emerald-50 hover:bg-emerald-100/80 text-emerald-950 border border-emerald-200"
-                }`}
-                title="Customer Orders, Wishlist & Addresses"
-              >
-                <User className="w-3.5 h-3.5 text-emerald-800" />
-                <span>Customer Dashboard</span>
-              </Link>
 
               {/* Logout button */}
               <button
@@ -208,8 +208,8 @@ const Navbar = () => {
 
             {user ? (
               <>
-                {/* BOTH LINKS DISPLAYED CLEARLY ON MOBILE FOR ADMIN */}
-                {user.role === "admin" && (
+                {/* Role-appropriate Dashboard link on mobile */}
+                {user.role === "admin" ? (
                   <Link
                     to="/admin"
                     onClick={() => setMobileMenuOpen(false)}
@@ -217,26 +217,25 @@ const Navbar = () => {
                   >
                     <span className="flex items-center gap-2">
                       <ShieldCheck className="w-4 h-4 text-amber-700" />
-                      <span>Admin Dashboard</span>
+                      <span>Admin Panel</span>
                     </span>
                     <span className="text-[10px] bg-amber-400 px-2 py-0.5 rounded-full font-bold">
-                      Store Owner
+                      Store Admin
                     </span>
                   </Link>
+                ) : (
+                  <Link
+                    to="/user/dashboard"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="p-2.5 rounded-xl bg-emerald-50 text-emerald-950 font-bold border border-emerald-200 flex items-center justify-between"
+                  >
+                    <span className="flex items-center gap-2">
+                      <User className="w-4 h-4 text-emerald-800" />
+                      <span>Customer Dashboard</span>
+                    </span>
+                    <span className="text-[10px] text-emerald-700">Orders & Profile →</span>
+                  </Link>
                 )}
-
-                {/* CUSTOMER DASHBOARD LINK ON MOBILE */}
-                <Link
-                  to="/user/dashboard"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="p-2.5 rounded-xl bg-emerald-50 text-emerald-950 font-bold border border-emerald-200 flex items-center justify-between"
-                >
-                  <span className="flex items-center gap-2">
-                    <User className="w-4 h-4 text-emerald-800" />
-                    <span>Customer Dashboard</span>
-                  </span>
-                  <span className="text-[10px] text-emerald-700">Orders & Profile →</span>
-                </Link>
 
                 <button
                   onClick={handleLogout}

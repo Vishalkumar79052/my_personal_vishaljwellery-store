@@ -148,21 +148,12 @@ const AdminDashboardLayout = () => {
           {/* Right: Actions, Storefront Link, Admin Badge & Logout */}
           <div className="flex items-center gap-3">
             <Link
-              to="/user/dashboard"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-stone-700 bg-stone-100 hover:bg-stone-200 border border-stone-200 transition-colors shadow-2xs"
+              to="/"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold text-emerald-950 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/80 transition-colors shadow-2xs"
+              title="Return to Vishal Jewellery Storefront"
             >
-              <Users className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Customer Dashboard</span>
-            </Link>
-
-            <Link
-              to="/shop"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium text-emerald-900 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-colors shadow-2xs"
-            >
-              <Store className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Storefront</span>
+              <Store className="w-3.5 h-3.5 text-emerald-800" />
+              <span>Storefront</span>
             </Link>
 
             <div className="h-5 w-px bg-stone-200 hidden sm:block" />

@@ -66,27 +66,81 @@ const UserDashboardLayout = () => {
 
   return (
     <div className="min-h-screen bg-[#FAF9F6] text-[#1F2421] flex flex-col font-sans">
-      {/* Admin Executive Switcher Banner (if user is admin) */}
-      {user?.role === "admin" && (
-        <div className="bg-gradient-to-r from-emerald-950 via-emerald-900 to-stone-900 text-amber-200 px-6 py-2.5 text-xs border-b border-amber-400/30 shadow-xs flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
-            <span className="font-semibold uppercase tracking-wider text-amber-300">
-              Maison Administrator Session Active
-            </span>
-            <span className="hidden sm:inline text-amber-100/70">
-              — You have full store management permissions.
-            </span>
+      {/* Top Luxury Customer Account Header */}
+      <header className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-stone-200/80 shadow-xs">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between gap-4">
+          {/* Left: Brand & Mobile Drawer Toggle */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setMobileOpen(!mobileOpen)}
+              className="md:hidden p-2 rounded-xl text-stone-600 hover:text-stone-900 hover:bg-stone-100 transition-colors"
+              aria-label="Toggle Navigation Menu"
+            >
+              {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
+
+            <Link to="/" className="flex items-center gap-2.5 group">
+              <div className="w-8 h-8 rounded-full bg-emerald-950 text-amber-300 flex items-center justify-center font-display font-bold text-xs border border-amber-300/40 shadow-xs">
+                VJ
+              </div>
+              <div>
+                <span className="font-display text-base sm:text-lg tracking-tight text-emerald-950 font-bold block leading-tight">
+                  Vishal Jewellery
+                </span>
+                <span className="text-[10px] tracking-wider uppercase font-semibold text-amber-700 block">
+                  Customer Portal
+                </span>
+              </div>
+            </Link>
           </div>
-          <Link
-            to="/admin"
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400 hover:bg-amber-300 text-emerald-950 font-bold tracking-wide transition-colors shadow-2xs text-[11px]"
-          >
-            <span>Switch to Admin Suite</span>
-            <ChevronRight className="w-3.5 h-3.5" />
-          </Link>
+
+          {/* Right: Storefront shortcut, Bag & Customer Profile */}
+          <div className="flex items-center gap-3">
+            <Link
+              to="/shop"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold text-emerald-950 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/80 transition-colors shadow-2xs"
+            >
+              <Store className="w-3.5 h-3.5 text-emerald-800" />
+              <span>Storefront</span>
+            </Link>
+
+            <Link
+              to="/cart"
+              className="relative p-2 rounded-xl text-stone-700 hover:bg-stone-100 transition-colors"
+              title="Shopping Bag"
+            >
+              <ShoppingCart className="w-4 h-4" />
+              {itemCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-amber-400 text-emerald-950 text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+                  {itemCount}
+                </span>
+              )}
+            </Link>
+
+            <div className="h-5 w-px bg-stone-200 hidden sm:block" />
+
+            <div className="flex items-center gap-2 pl-1">
+              <div className="w-8 h-8 rounded-full bg-emerald-900 text-amber-200 font-display text-xs font-bold flex items-center justify-center border border-amber-300/40 shadow-xs">
+                {user?.name ? user.name.charAt(0).toUpperCase() : "C"}
+              </div>
+              <div className="hidden lg:block text-left">
+                <p className="text-xs font-semibold text-stone-900 leading-tight truncate max-w-[120px]">
+                  {user?.name || "Patron"}
+                </p>
+                <p className="text-[10px] text-amber-800 font-medium">Customer Account</p>
+              </div>
+            </div>
+
+            <button
+              onClick={handleLogout}
+              className="p-1.5 rounded-lg text-stone-500 hover:text-red-700 hover:bg-red-50 transition-colors"
+              title="Sign Out"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
         </div>
-      )}
+      </header>
 
       {/* Main Container */}
       <div className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-8 flex flex-col md:flex-row gap-8">

@@ -172,10 +172,6 @@ const Footer = () => {
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left">
           <p>© {new Date().getFullYear()} Vishal Jewellery Store. All rights reserved.</p>
           <div className="flex items-center gap-6">
-            <Link to="/admin" className="hover:text-forest-900 transition-colors inline-flex items-center gap-1 font-medium text-forest-800">
-              <span className="w-1.5 h-1.5 rounded-full bg-forest-600" />
-              Admin Portal
-            </Link>
             <Link to="/shop" className="hover:text-forest-900 transition-colors">
               Privacy Policy
             </Link>

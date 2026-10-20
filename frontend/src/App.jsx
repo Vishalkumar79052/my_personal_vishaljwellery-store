@@ -1,6 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import Navbar from "./components/Navbar.jsx";
-import Footer from "./components/Footer.jsx";
+import StorefrontLayout from "./components/StorefrontLayout.jsx";
 import { PrivateRoute, AdminRoute } from "./components/RouteGuards.jsx";
 
 import Home from "./pages/Home.jsx";
@@ -33,83 +32,95 @@ import AdminSettings from "./pages/admin/AdminSettings.jsx";
 
 function App() {
   return (
-    <div className="min-h-screen flex flex-col bg-[#FAF9F6] text-[#1F2421]">
-      <Navbar />
-      <main className="flex-1">
-        <Routes>
-          {/* Public Storefront */}
-          <Route path="/" element={<Home />} />
-          <Route path="/shop" element={<ProductList />} />
-          <Route path="/product/:id" element={<ProductDetail />} />
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+    <Routes>
+      {/* ========================================================
+          A. Storefront Layout (Storefront Navbar + Outlet + Footer)
+          ======================================================== */}
+      <Route element={<StorefrontLayout />}>
+        <Route path="/" element={<Home />} />
+        <Route path="/shop" element={<ProductList />} />
+        <Route path="/collections" element={<ProductList />} />
+        <Route path="/product/:id" element={<ProductDetail />} />
+        <Route path="/cart" element={<Cart />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
 
-          {/* Protected Customer User Dashboard Routes */}
-          <Route element={<PrivateRoute />}>
-            <Route path="/checkout" element={<Checkout />} />
-            
-            {/* Primary Customer Dashboard path */}
-            <Route path="/user/dashboard" element={<UserDashboardLayout />}>
-              <Route index element={<Overview />} />
-              <Route path="orders" element={<Orders />} />
-              <Route path="orders/:id" element={<OrderDetail />} />
-              <Route path="wishlist" element={<Wishlist />} />
-              <Route path="addresses" element={<Addresses />} />
-              <Route path="profile" element={<Profile />} />
-              <Route path="support" element={<Support />} />
-            </Route>
+        {/* Protected Checkout within Storefront */}
+        <Route element={<PrivateRoute />}>
+          <Route path="/checkout" element={<Checkout />} />
+        </Route>
 
-            {/* Seamless support for /dashboard paths (e.g. /dashboard/orders/:id) */}
-            <Route path="/dashboard" element={<UserDashboardLayout />}>
-              <Route index element={<Overview />} />
-              <Route path="orders" element={<Orders />} />
-              <Route path="orders/:id" element={<OrderDetail />} />
-              <Route path="wishlist" element={<Wishlist />} />
-              <Route path="addresses" element={<Addresses />} />
-              <Route path="profile" element={<Profile />} />
-              <Route path="support" element={<Support />} />
-            </Route>
-          </Route>
-
-
-          {/* Protected Admin Dashboard Routes */}
-          <Route element={<AdminRoute />}>
-            <Route path="/admin" element={<AdminDashboardLayout />}>
-              <Route index element={<AdminOverview />} />
-              <Route path="products" element={<ManageProducts />} />
-              <Route path="orders" element={<ManageOrders />} />
-              <Route path="inventory" element={<ManageInventory />} />
-              <Route path="categories" element={<ManageCategories />} />
-              <Route path="users" element={<ManageUsers />} />
-              <Route path="settings" element={<AdminSettings />} />
-            </Route>
-          </Route>
-
-          {/* Fallback */}
-          <Route
-            path="*"
-            element={
-              <div className="max-w-3xl mx-auto px-6 py-28 text-center space-y-4">
-                <h1 className="font-display text-4xl text-stone-900 font-bold">404</h1>
-                <p className="text-sm text-stone-500">
-                  The requested jewellery gallery or boutique page could not be located.
-                </p>
-                <div className="pt-2">
-                  <a
-                    href="/"
-                    className="inline-block px-6 py-2.5 rounded-full bg-emerald-900 text-amber-100 text-xs font-semibold"
-                  >
-                    Return to Storefront
-                  </a>
-                </div>
+        {/* 404 Fallback within Storefront */}
+        <Route
+          path="*"
+          element={
+            <div className="max-w-3xl mx-auto px-6 py-28 text-center space-y-4">
+              <h1 className="font-display text-4xl text-stone-900 font-bold">404</h1>
+              <p className="text-sm text-stone-500">
+                The requested jewellery gallery or boutique page could not be located.
+              </p>
+              <div className="pt-2">
+                <a
+                  href="/"
+                  className="inline-block px-6 py-2.5 rounded-full bg-emerald-900 text-amber-100 text-xs font-semibold"
+                >
+                  Return to Storefront
+                </a>
               </div>
-            }
-          />
-        </Routes>
-      </main>
-      <Footer />
-    </div>
+            </div>
+          }
+        />
+      </Route>
+
+      {/* ========================================================
+          B. Customer User Dashboard Layout (Dedicated Customer Header + Sidebar + Workspace)
+          ======================================================== */}
+      <Route element={<PrivateRoute />}>
+        {/* Canonical Customer Dashboard Route */}
+        <Route path="/user/dashboard" element={<UserDashboardLayout />}>
+          <Route index element={<Overview />} />
+          <Route path="orders" element={<Orders />} />
+          <Route path="orders/:id" element={<OrderDetail />} />
+          <Route path="wishlist" element={<Wishlist />} />
+          <Route path="addresses" element={<Addresses />} />
+          <Route path="profile" element={<Profile />} />
+          <Route path="support" element={<Support />} />
+        </Route>
+
+        {/* Direct /user and /dashboard aliases */}
+        <Route path="/user" element={<Navigate to="/user/dashboard" replace />} />
+        <Route path="/user/orders" element={<Navigate to="/user/dashboard/orders" replace />} />
+        <Route path="/user/orders/:id" element={<Navigate to="/user/dashboard/orders" replace />} />
+        <Route path="/user/profile" element={<Navigate to="/user/dashboard/profile" replace />} />
+        <Route path="/user/addresses" element={<Navigate to="/user/dashboard/addresses" replace />} />
+        <Route path="/user/wishlist" element={<Navigate to="/user/dashboard/wishlist" replace />} />
+
+        <Route path="/dashboard" element={<UserDashboardLayout />}>
+          <Route index element={<Overview />} />
+          <Route path="orders" element={<Orders />} />
+          <Route path="orders/:id" element={<OrderDetail />} />
+          <Route path="wishlist" element={<Wishlist />} />
+          <Route path="addresses" element={<Addresses />} />
+          <Route path="profile" element={<Profile />} />
+          <Route path="support" element={<Support />} />
+        </Route>
+      </Route>
+
+      {/* ========================================================
+          C. Admin Dashboard Layout (Dedicated Executive Admin Header + Sidebar + Workspace)
+          ======================================================== */}
+      <Route element={<AdminRoute />}>
+        <Route path="/admin" element={<AdminDashboardLayout />}>
+          <Route index element={<AdminOverview />} />
+          <Route path="products" element={<ManageProducts />} />
+          <Route path="orders" element={<ManageOrders />} />
+          <Route path="inventory" element={<ManageInventory />} />
+          <Route path="categories" element={<ManageCategories />} />
+          <Route path="users" element={<ManageUsers />} />
+          <Route path="settings" element={<AdminSettings />} />
+        </Route>
+      </Route>
+    </Routes>
   );
 }
 
