@@ -5,9 +5,11 @@ const Cart = () => {
   const { cart, subtotal, updateQuantity, removeFromCart, loading } = useCart();
   const navigate = useNavigate();
 
+  const validCartItems = (Array.isArray(cart) ? cart : []).filter((item) => item && item.product);
+
   if (loading) return <div className="max-w-5xl mx-auto px-6 py-24 text-center text-forest-700/60">Loading cart…</div>;
 
-  if (cart.length === 0) {
+  if (validCartItems.length === 0) {
     return (
       <div className="max-w-5xl mx-auto px-6 py-24 text-center">
         <h1 className="font-display text-3xl mb-4">Your cart is empty</h1>
@@ -23,8 +25,9 @@ const Cart = () => {
       <h1 className="font-display text-4xl mb-10">Your cart</h1>
       <div className="grid md:grid-cols-3 gap-12">
         <div className="md:col-span-2 space-y-6">
-          {cart.map((item) => (
+          {validCartItems.map((item) => (
             <div key={item.product._id} className="flex gap-4 pb-6 border-b border-forest-100">
+
               <img src={item.product.image} alt={item.product.name} className="w-24 h-24 rounded-xl object-cover" />
               <div className="flex-1">
                 <h3 className="font-display text-lg">{item.product.name}</h3>

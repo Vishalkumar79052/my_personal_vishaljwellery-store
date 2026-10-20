@@ -107,8 +107,10 @@ const ProductDetail = () => {
         </h2>
 
         <div className="space-y-4 mb-10">
-          {product.reviews.length === 0 && <p className="text-forest-700/60 text-sm">No reviews yet.</p>}
-          {product.reviews.map((r, idx) => (
+          {(!Array.isArray(product.reviews) || product.reviews.length === 0) && (
+            <p className="text-forest-700/60 text-sm">No reviews yet.</p>
+          )}
+          {(Array.isArray(product.reviews) ? product.reviews : []).map((r, idx) => (
             <div key={idx} className="card p-4">
               <div className="flex justify-between mb-1">
                 <span className="font-medium">{r.name}</span>
@@ -118,6 +120,7 @@ const ProductDetail = () => {
             </div>
           ))}
         </div>
+
 
         {user ? (
           <form onSubmit={handleReviewSubmit} className="card p-5 space-y-3">

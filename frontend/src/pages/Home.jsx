@@ -7,8 +7,15 @@ const Home = () => {
   const [featured, setFeatured] = useState([]);
 
   useEffect(() => {
-    api.get("/products?limit=8").then((res) => setFeatured(res.data.products));
+    api
+      .get("/products?limit=8")
+      .then((res) => setFeatured(Array.isArray(res.data?.products) ? res.data.products : Array.isArray(res.data) ? res.data : []))
+      .catch((err) => {
+        console.warn("Could not load featured products:", err.message);
+        setFeatured([]);
+      });
   }, []);
+
 
   return (
     <div>

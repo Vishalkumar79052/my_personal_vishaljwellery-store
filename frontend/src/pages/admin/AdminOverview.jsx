@@ -1,33 +1,66 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../../api/axios.js";
+import {
+  TrendingUp,
+  DollarSign,
+  ShoppingCart,
+  Users,
+  Package,
+  AlertTriangle,
+  Clock,
+  CheckCircle,
+  Truck,
+  XCircle,
+  Plus,
+  Boxes,
+  RefreshCw,
+  Sparkles,
+  ExternalLink,
+} from "../../components/icons/LucideIcons.jsx";
 
-const StatCard = ({ label, value, subtext, icon, trend, accent = "forest" }) => {
-  const accentStyles = {
-    forest: "bg-forest-50 text-forest-800 border-forest-200/60",
-    emerald: "bg-emerald-50 text-emerald-800 border-emerald-200/60",
-    amber: "bg-amber-50 text-amber-800 border-amber-200/60",
-    blue: "bg-blue-50 text-blue-800 border-blue-200/60",
+const StatCard = ({ label, value, subtext, icon: Icon, trend, accent = "emerald" }) => {
+  const accentThemes = {
+    emerald: {
+      bg: "bg-emerald-50/80 text-emerald-900 border-emerald-200/60",
+      pill: "bg-emerald-100/70 text-emerald-800",
+      iconBg: "bg-emerald-900 text-amber-200",
+    },
+    amber: {
+      bg: "bg-amber-50/80 text-amber-900 border-amber-200/60",
+      pill: "bg-amber-100/70 text-amber-800",
+      iconBg: "bg-amber-700 text-white",
+    },
+    blue: {
+      bg: "bg-blue-50/80 text-blue-900 border-blue-200/60",
+      pill: "bg-blue-100/70 text-blue-800",
+      iconBg: "bg-blue-900 text-white",
+    },
+    stone: {
+      bg: "bg-stone-50 text-stone-900 border-stone-200/60",
+      pill: "bg-stone-100 text-stone-800",
+      iconBg: "bg-stone-800 text-white",
+    },
   };
 
+  const theme = accentThemes[accent] || accentThemes.emerald;
+
   return (
-    <div className="bg-white rounded-2xl p-6 border border-forest-100 shadow-soft hover:shadow-md transition-shadow">
-      <div className="flex items-start justify-between">
+    <div className="bg-white rounded-3xl p-5 border border-stone-200/80 shadow-soft hover:shadow-md transition-all">
+      <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-medium text-forest-700/70 tracking-wide uppercase">{label}</p>
-          <p className="font-display text-3xl text-ink mt-2">{value}</p>
-          {subtext && <p className="text-xs text-forest-700/60 mt-1">{subtext}</p>}
+          <span className="text-[11px] font-semibold text-stone-500 uppercase tracking-wider">{label}</span>
+          <p className="font-display text-2xl sm:text-3xl font-bold text-stone-900 mt-1">{value}</p>
+          {subtext && <p className="text-xs text-stone-500 mt-1">{subtext}</p>}
         </div>
-        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border shrink-0 ${accentStyles[accent]}`}>
-          {icon}
+        <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 shadow-xs ${theme.iconBg}`}>
+          <Icon className="w-5 h-5" />
         </div>
       </div>
       {trend && (
-        <div className="mt-4 pt-3 border-t border-forest-50 flex items-center text-xs font-medium text-emerald-700">
-          <svg className="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-          </svg>
-          {trend}
+        <div className="mt-4 pt-3 border-t border-stone-100 flex items-center text-xs font-semibold text-emerald-800">
+          <TrendingUp className="w-3.5 h-3.5 mr-1 text-emerald-600" />
+          <span>{trend}</span>
         </div>
       )}
     </div>
@@ -36,13 +69,15 @@ const StatCard = ({ label, value, subtext, icon, trend, accent = "forest" }) => 
 
 const AdminOverview = () => {
   const [stats, setStats] = useState(null);
-  const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [timeRange, setTimeRange] = useState("7d");
+  const [refreshing, setRefreshing] = useState(false);
 
-  const fetchStats = () => {
+  const fetchStats = (range = timeRange) => {
     setLoading(true);
     api
-      .get("/admin/stats")
+      .get(`/admin/stats?range=${range}`)
       .then((res) => {
         setStats(res.data);
         setError("");
@@ -50,26 +85,30 @@ const AdminOverview = () => {
       .catch((err) => {
         setError(err.response?.data?.message || "Could not load dashboard statistics");
       })
-      .finally(() => setLoading(false));
+      .finally(() => {
+        setLoading(false);
+        setRefreshing(false);
+      });
   };
 
   useEffect(() => {
-    fetchStats();
-  }, []);
+    fetchStats(timeRange);
+  }, [timeRange]);
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    fetchStats(timeRange);
+  };
 
   if (error) {
     return (
-      <div className="card p-8 text-center max-w-md mx-auto my-12 border border-red-200">
+      <div className="bg-white rounded-3xl p-8 text-center max-w-md mx-auto my-12 border border-red-200 shadow-soft">
         <div className="w-12 h-12 rounded-full bg-red-100 text-red-600 flex items-center justify-center mx-auto mb-4">
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
+          <AlertTriangle className="w-6 h-6" />
         </div>
-        <p className="text-red-800 font-semibold mb-2">{error}</p>
-        <p className="text-xs text-forest-700/60 mb-6">
-          Please ensure you are signed in with an administrator account to access this console.
-        </p>
-        <button onClick={fetchStats} className="btn-secondary !text-xs !py-2">
+        <h3 className="font-display text-xl text-stone-900 font-bold mb-2">Dashboard Error</h3>
+        <p className="text-xs text-stone-600 mb-6">{error}</p>
+        <button onClick={() => fetchStats(timeRange)} className="btn-primary !text-xs !py-2.5">
           Retry Connection
         </button>
       </div>
@@ -79,255 +118,368 @@ const AdminOverview = () => {
   if (loading || !stats) {
     return (
       <div className="space-y-6 animate-pulse">
-        <div className="h-10 bg-sand/60 rounded-xl w-64" />
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="h-10 bg-stone-200/60 rounded-2xl w-64" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-32 bg-sand/40 rounded-2xl" />
+            <div key={i} className="h-32 bg-stone-200/50 rounded-3xl" />
           ))}
         </div>
-        <div className="h-64 bg-sand/30 rounded-2xl" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 h-72 bg-stone-200/40 rounded-3xl" />
+          <div className="h-72 bg-stone-200/40 rounded-3xl" />
+        </div>
       </div>
     );
   }
 
   const aov = stats.orderCount > 0 ? (stats.totalRevenue / stats.orderCount).toFixed(2) : "0.00";
-
-  // Calculate 7-day revenue metrics
   const salesByDay = stats.salesByDay || [];
   const maxDayRevenue = Math.max(...salesByDay.map((d) => d.total), 1);
-  const sevenDayTotal = salesByDay.reduce((sum, d) => sum + d.total, 0);
+  const rangeTotal = salesByDay.reduce((sum, d) => sum + d.total, 0);
+
+  const statusIcons = {
+    pending: <Clock className="w-3.5 h-3.5 text-amber-600" />,
+    confirmed: <CheckCircle className="w-3.5 h-3.5 text-teal-600" />,
+    processing: <Sparkles className="w-3.5 h-3.5 text-blue-600" />,
+    shipped: <Truck className="w-3.5 h-3.5 text-purple-600" />,
+    delivered: <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />,
+    cancelled: <XCircle className="w-3.5 h-3.5 text-red-600" />,
+  };
 
   const statusColors = {
-    delivered: "bg-emerald-100 text-emerald-800 border-emerald-200",
-    shipped: "bg-purple-100 text-purple-800 border-purple-200",
-    processing: "bg-blue-100 text-blue-800 border-blue-200",
-    pending: "bg-amber-100 text-amber-800 border-amber-200",
-    cancelled: "bg-red-100 text-red-800 border-red-200",
+    delivered: "bg-emerald-50 text-emerald-800 border-emerald-200",
+    shipped: "bg-purple-50 text-purple-800 border-purple-200",
+    processing: "bg-blue-50 text-blue-800 border-blue-200",
+    confirmed: "bg-teal-50 text-teal-800 border-teal-200",
+    pending: "bg-amber-50 text-amber-800 border-amber-200",
+    cancelled: "bg-red-50 text-red-800 border-red-200",
+  };
+
+  const orderCounts = stats.orderStatusCounts || {
+    pending: 0,
+    confirmed: 0,
+    processing: 0,
+    shipped: 0,
+    delivered: 0,
+    cancelled: 0,
   };
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       {/* Executive Welcome & Controls */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-forest-100">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-stone-200/80">
         <div>
           <div className="flex items-center gap-3">
-            <h1 className="font-display text-3xl text-forest-900">Executive Dashboard</h1>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-medium">
+            <h1 className="font-display text-2xl sm:text-3xl font-bold text-stone-900 tracking-tight">
+              Executive Overview
+            </h1>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-semibold">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              Live Online
+              Live Boutique Store
             </span>
           </div>
-          <p className="text-forest-700/60 text-sm mt-1">
-            Real-time performance, inventory levels, and order management for Vishal Jewellery Store.
+          <p className="text-xs text-stone-500 mt-1">
+            Real-time sales velocity, jewellery inventory levels, and order fulfillment metrics.
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        {/* Quick Range Selector & Action Buttons */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Time Range Selector */}
+          <div className="bg-white border border-stone-200 rounded-2xl p-1 flex items-center shadow-xs">
+            {[
+              { id: "7d", label: "7 Days" },
+              { id: "30d", label: "30 Days" },
+              { id: "90d", label: "90 Days" },
+              { id: "1y", label: "Year" },
+            ].map((r) => (
+              <button
+                key={r.id}
+                onClick={() => setTimeRange(r.id)}
+                className={`px-2.5 py-1 text-xs font-medium rounded-xl transition-colors ${
+                  timeRange === r.id
+                    ? "bg-emerald-900 text-amber-100 font-semibold shadow-xs"
+                    : "text-stone-600 hover:text-stone-900 hover:bg-stone-50"
+                }`}
+              >
+                {r.label}
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={handleRefresh}
+            className="p-2 rounded-xl bg-white border border-stone-200 text-stone-600 hover:text-stone-900 hover:bg-stone-50 shadow-xs transition-colors"
+            title="Refresh Data"
+          >
+            <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
+          </button>
+
           <Link
             to="/admin/products"
-            className="btn-primary !px-4 !py-2 text-xs inline-flex items-center gap-1.5"
+            className="btn-primary !px-3.5 !py-1.5 text-xs inline-flex items-center gap-1.5 shadow-xs"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-            </svg>
-            Add Jewellery
-          </Link>
-          <Link
-            to="/shop"
-            className="btn-secondary !px-4 !py-2 text-xs inline-flex items-center gap-1.5"
-            target="_blank"
-            rel="noreferrer"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-            </svg>
-            Storefront
+            <Plus className="w-3.5 h-3.5" />
+            <span>Add Jewellery</span>
           </Link>
         </div>
       </div>
 
-      {/* KPI Stats Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      {/* 4 Core Executive KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           label="Gross Revenue"
           value={`$${stats.totalRevenue.toFixed(2)}`}
-          subtext="Lifetime store volume"
-          trend="+18.4% growth"
+          subtext={`Avg order volume: $${aov}`}
+          trend="Store volume tracked"
           accent="emerald"
-          icon={
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          }
+          icon={DollarSign}
         />
         <StatCard
           label="Total Orders"
           value={stats.orderCount}
-          subtext={`Avg. value: $${aov}`}
-          trend="Order pipeline active"
+          subtext={`${orderCounts.pending} pending / ${orderCounts.processing} in progress`}
+          trend="Fulfillment pipeline active"
           accent="blue"
-          icon={
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-            </svg>
-          }
-        />
-        <StatCard
-          label="Active Customers"
-          value={stats.userCount}
-          subtext="Registered client accounts"
-          accent="forest"
-          icon={
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
-          }
+          icon={ShoppingCart}
         />
         <StatCard
           label="Jewellery Catalog"
           value={stats.productCount}
-          subtext={`${stats.lowStock.length} items low stock`}
+          subtext={`${stats.lowStockCount || 0} low stock / ${stats.outOfStockCount || 0} out`}
+          trend="Cloudinary CDN hosted"
           accent="amber"
-          icon={
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-            </svg>
-          }
+          icon={Package}
+        />
+        <StatCard
+          label="Registered Clients"
+          value={stats.userCount}
+          subtext="Verified customer accounts"
+          accent="stone"
+          icon={Users}
         />
       </div>
 
-      {/* 7-Day Revenue Analytics & Cloud Media Storage Hub */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Visual Revenue Bars (2 Columns) */}
-        <div className="lg:col-span-2 bg-white rounded-3xl p-6 border border-forest-100 shadow-soft">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="font-display text-xl text-ink">Revenue Velocity</h2>
-              <p className="text-xs text-forest-700/60 mt-0.5">Last 7 days sales performance</p>
-            </div>
-            <div className="text-right">
-              <span className="text-xs text-forest-700/60">7-Day Total:</span>
-              <p className="font-display text-lg text-forest-900">${sevenDayTotal.toFixed(2)}</p>
-            </div>
-          </div>
-
-          {salesByDay.length === 0 ? (
-            <div className="h-44 flex flex-col items-center justify-center text-xs text-forest-700/50 bg-forest-50/40 rounded-2xl border border-dashed border-forest-100">
-              <p>No transactions recorded in the last 7 days.</p>
-              <p className="text-[11px] text-forest-700/40 mt-1">Live sales will graph automatically here.</p>
-            </div>
-          ) : (
-            <div className="h-48 flex items-end gap-3 pt-6 pb-2 px-2">
-              {salesByDay.map((day) => {
-                const heightPercent = Math.max(12, Math.round((day.total / maxDayRevenue) * 100));
-                const dateLabel = new Date(day._id + "T00:00:00").toLocaleDateString("en-US", { weekday: "short" });
-                return (
-                  <div key={day._id} className="flex-1 flex flex-col items-center gap-2 group relative">
-                    {/* Tooltip on Hover */}
-                    <div className="opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity absolute -top-12 bg-ink text-white text-[11px] py-1 px-2.5 rounded-lg whitespace-nowrap z-20 shadow-md">
-                      ${day.total.toFixed(2)} ({day.count} {day.count === 1 ? "order" : "orders"})
-                    </div>
-                    {/* Bar */}
-                    <div className="w-full bg-forest-100 rounded-t-xl h-36 flex items-end overflow-hidden">
-                      <div
-                        style={{ height: `${heightPercent}%` }}
-                        className="w-full bg-gradient-to-t from-forest-700 to-forest-500 rounded-t-xl transition-all duration-500 group-hover:from-forest-800 group-hover:to-forest-600"
-                      />
-                    </div>
-                    <span className="text-[11px] font-medium text-forest-700">{dateLabel}</span>
-                  </div>
-                );
-              })}
-            </div>
-          )}
+      {/* Order Status Pipeline Breakdown */}
+      <div className="bg-white rounded-3xl p-5 border border-stone-200/80 shadow-soft">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-xs font-semibold text-stone-500 uppercase tracking-wider">
+            Order Fulfillment Pipeline
+          </span>
+          <Link to="/admin/orders" className="text-xs font-semibold text-emerald-800 hover:underline">
+            Manage all orders →
+          </Link>
         </div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          {[
+            { key: "pending", label: "Pending", count: orderCounts.pending, bg: "bg-amber-50 text-amber-900 border-amber-200" },
+            { key: "confirmed", label: "Confirmed", count: orderCounts.confirmed || 0, bg: "bg-teal-50 text-teal-900 border-teal-200" },
+            { key: "processing", label: "Processing", count: orderCounts.processing, bg: "bg-blue-50 text-blue-900 border-blue-200" },
+            { key: "shipped", label: "Shipped", count: orderCounts.shipped, bg: "bg-purple-50 text-purple-900 border-purple-200" },
+            { key: "delivered", label: "Delivered", count: orderCounts.delivered, bg: "bg-emerald-50 text-emerald-900 border-emerald-200" },
+            { key: "cancelled", label: "Cancelled", count: orderCounts.cancelled, bg: "bg-red-50 text-red-900 border-red-200" },
+          ].map((item) => (
+            <div key={item.key} className={`p-3 rounded-2xl border ${item.bg} flex items-center justify-between`}>
+              <div>
+                <p className="text-[11px] font-semibold opacity-75">{item.label}</p>
+                <p className="font-display text-xl font-bold mt-0.5">{item.count}</p>
+              </div>
+              <div className="p-2 rounded-xl bg-white/70 shadow-2xs">
+                {statusIcons[item.key]}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
 
-        {/* Cloud Media Storage Status Card */}
-        <div className="bg-white rounded-3xl p-6 border border-forest-100 shadow-soft flex flex-col justify-between">
+      {/* Sales Velocity Chart & Best Sellers */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Sales Velocity Chart (2 Columns) */}
+        <div className="lg:col-span-2 bg-white rounded-3xl p-6 border border-stone-200/80 shadow-soft flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="font-display text-xl text-ink">Cloud Media Hub</h2>
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+              <div>
+                <h2 className="font-display text-lg font-bold text-stone-900">Revenue Velocity</h2>
+                <p className="text-xs text-stone-500">Sales performance over selected period ({timeRange})</p>
+              </div>
+              <div className="text-right">
+                <span className="text-[11px] text-stone-400 block uppercase">Period Volume</span>
+                <p className="font-display text-xl font-bold text-emerald-950">${rangeTotal.toFixed(2)}</p>
+              </div>
             </div>
-            <p className="text-xs text-forest-700/70 mb-5 leading-relaxed">
-              Automated Cloudinary CDN image streaming active for the luxury jewellery catalog.
-            </p>
 
-            <div className="space-y-3 text-xs">
-              <div className="p-3 rounded-xl bg-forest-50/70 border border-forest-100 flex items-center justify-between">
-                <span className="text-forest-700/80">Provider:</span>
-                <span className="font-semibold text-forest-900">Cloudinary CDN</span>
+            {salesByDay.length === 0 ? (
+              <div className="h-52 flex flex-col items-center justify-center text-xs text-stone-400 bg-[#FAF9F6] rounded-2xl border border-dashed border-stone-200">
+                <p>No orders recorded in this time range.</p>
+                <p className="text-[11px] text-stone-400 mt-1">New customer checkouts will plot automatically here.</p>
               </div>
-              <div className="p-3 rounded-xl bg-forest-50/70 border border-forest-100 flex items-center justify-between">
-                <span className="text-forest-700/80">Cloud Name:</span>
-                <span className="font-mono font-medium text-forest-900">itepncom</span>
+            ) : (
+              <div className="h-52 flex items-end gap-2 pt-6 pb-2 px-1">
+                {salesByDay.map((day) => {
+                  const heightPercent = Math.max(10, Math.round((day.total / maxDayRevenue) * 100));
+                  const dateLabel = new Date(day._id + "T00:00:00").toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                  });
+                  return (
+                    <div key={day._id} className="flex-1 flex flex-col items-center gap-2 group relative">
+                      {/* Tooltip on Hover */}
+                      <div className="opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity absolute -top-12 bg-stone-900 text-amber-100 text-[11px] py-1 px-2.5 rounded-lg whitespace-nowrap z-20 shadow-md">
+                        ${day.total.toFixed(2)} ({day.count} {day.count === 1 ? "order" : "orders"})
+                      </div>
+                      {/* Bar */}
+                      <div className="w-full bg-stone-100 rounded-t-xl h-40 flex items-end overflow-hidden">
+                        <div
+                          style={{ height: `${heightPercent}%` }}
+                          className="w-full bg-gradient-to-t from-emerald-900 via-emerald-700 to-emerald-500 rounded-t-xl transition-all duration-500 group-hover:from-emerald-950 group-hover:to-amber-500"
+                        />
+                      </div>
+                      <span className="text-[10px] font-medium text-stone-500 truncate max-w-full">
+                        {dateLabel}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
-              <div className="p-3 rounded-xl bg-forest-50/70 border border-forest-100 flex items-center justify-between">
-                <span className="text-forest-700/80">Folder:</span>
-                <span className="font-mono text-[11px] text-forest-900">vishal-jewellery-products</span>
-              </div>
-            </div>
+            )}
           </div>
 
-          <div className="pt-4 mt-4 border-t border-forest-100">
+          <div className="pt-3 border-t border-stone-100 mt-4 flex items-center justify-between text-xs text-stone-500">
+            <span className="flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-sm bg-emerald-700 inline-block" />
+              Real customer transactions
+            </span>
+            <span>Range: {stats.days} days</span>
+          </div>
+        </div>
+
+        {/* Best-Selling Jewellery Pieces (1 Column) */}
+        <div className="bg-white rounded-3xl p-6 border border-stone-200/80 shadow-soft flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="font-display text-lg font-bold text-stone-900">Best Sellers</h2>
+              <span className="text-[10px] font-semibold uppercase tracking-wider text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                Top Pieces
+              </span>
+            </div>
+
+            {(!stats.bestSellers || stats.bestSellers.length === 0) ? (
+              <div className="h-44 flex flex-col items-center justify-center text-xs text-stone-400 bg-[#FAF9F6] rounded-2xl border border-dashed border-stone-200">
+                <p>No sales history recorded yet.</p>
+                <p className="text-[11px] text-stone-400 mt-1">Best-performing pieces will rank here.</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {stats.bestSellers.map((item, idx) => (
+                  <div key={idx} className="p-2.5 rounded-2xl bg-[#FAF9F6] border border-stone-200/60 flex items-center gap-3">
+                    {item.image ? (
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="w-11 h-11 rounded-xl object-cover border border-stone-200 bg-white shrink-0"
+                      />
+                    ) : (
+                      <div className="w-11 h-11 rounded-xl bg-stone-100 flex items-center justify-center text-stone-500 shrink-0">
+                        <Package className="w-5 h-5" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-stone-900 truncate">{item.name}</p>
+                      <p className="text-[11px] text-stone-500">
+                        {item.unitsSold} units sold (${item.revenue?.toFixed(2) || "0.00"})
+                      </p>
+                    </div>
+                    <span className="font-display text-xs font-bold text-emerald-900 shrink-0">
+                      #{idx + 1}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="pt-4 mt-4 border-t border-stone-100">
             <Link
               to="/admin/products"
-              className="btn-secondary w-full text-xs text-center !py-2.5 block"
+              className="text-xs font-semibold text-emerald-800 hover:text-emerald-950 flex items-center justify-between"
             >
-              Upload New Media File
+              <span>Explore full catalog</span>
+              <ExternalLink className="w-3.5 h-3.5" />
             </Link>
           </div>
         </div>
       </div>
 
-      {/* Recent Orders & Low Stock Dual Section */}
+      {/* Recent Orders & Stock Watch Dual Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Recent Orders Table (2 Columns) */}
-        <div className="lg:col-span-2 bg-white rounded-3xl p-6 border border-forest-100 shadow-soft">
-          <div className="flex items-center justify-between mb-6">
+        <div className="lg:col-span-2 bg-white rounded-3xl p-6 border border-stone-200/80 shadow-soft">
+          <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="font-display text-xl text-ink">Recent Orders</h2>
-              <p className="text-xs text-forest-700/60 mt-0.5">Latest customer transactions</p>
+              <h2 className="font-display text-lg font-bold text-stone-900">Recent Orders</h2>
+              <p className="text-xs text-stone-500">Latest customer acquisitions & transactions</p>
             </div>
-            <Link to="/admin/orders" className="text-xs font-semibold text-forest-700 hover:text-forest-900 underline">
+            <Link to="/admin/orders" className="text-xs font-semibold text-emerald-800 hover:underline">
               View all orders →
             </Link>
           </div>
 
-          {stats.recentOrders.length === 0 ? (
-            <p className="text-xs text-forest-700/60 py-8 text-center">No orders registered yet.</p>
+          {(!Array.isArray(stats?.recentOrders) || stats.recentOrders.length === 0) ? (
+            <p className="text-xs text-stone-400 py-10 text-center">No orders registered yet.</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="border-b border-forest-100 text-forest-700/60">
-                    <th className="py-2.5 pr-4 font-medium">Order ID</th>
-                    <th className="py-2.5 pr-4 font-medium">Customer</th>
-                    <th className="py-2.5 pr-4 font-medium">Date</th>
-                    <th className="py-2.5 pr-4 font-medium">Amount</th>
-                    <th className="py-2.5 font-medium">Status</th>
+                  <tr className="border-b border-stone-100 text-stone-400 font-medium">
+                    <th className="py-2.5 pr-4">Order ID</th>
+                    <th className="py-2.5 pr-4">Customer</th>
+                    <th className="py-2.5 pr-4">Payment</th>
+                    <th className="py-2.5 pr-4">Amount</th>
+                    <th className="py-2.5 pr-4">Status</th>
+                    <th className="py-2.5 text-right">Action</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-forest-50">
-                  {stats.recentOrders.map((o) => (
-                    <tr key={o._id} className="hover:bg-forest-50/30 transition-colors">
-                      <td className="py-3 pr-4 font-mono font-medium text-forest-900">
+                <tbody className="divide-y divide-stone-50">
+                  {(Array.isArray(stats.recentOrders) ? stats.recentOrders : []).map((o) => (
+                    <tr key={o._id} className="hover:bg-stone-50/60 transition-colors">
+
+                      <td className="py-3 pr-4 font-mono font-semibold text-stone-900">
                         #{o._id.slice(-6).toUpperCase()}
                       </td>
                       <td className="py-3 pr-4">
-                        <p className="font-medium text-ink">{o.user?.name || "Customer"}</p>
-                        <p className="text-[11px] text-forest-700/60 truncate max-w-[150px]">{o.user?.email}</p>
+                        <p className="font-medium text-stone-900">{o.user?.name || "Customer"}</p>
+                        <p className="text-[11px] text-stone-400 truncate max-w-[140px]">{o.user?.email}</p>
                       </td>
-                      <td className="py-3 pr-4 text-forest-700/70">
-                        {new Date(o.createdAt).toLocaleDateString()}
+                      <td className="py-3 pr-4">
+                        <span
+                          className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
+                            o.isPaid
+                              ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                              : "bg-amber-50 text-amber-800 border-amber-200"
+                          }`}
+                        >
+                          {o.isPaid ? "Paid" : "Pending"}
+                        </span>
                       </td>
-                      <td className="py-3 pr-4 font-medium text-ink">
-                        ${o.totalPrice.toFixed(2)}
+                      <td className="py-3 pr-4 font-semibold text-stone-900">
+                        ${o.totalPrice?.toFixed(2)}
                       </td>
-                      <td className="py-3">
-                        <span className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-medium border capitalize ${statusColors[o.status] || "bg-sand text-forest-800 border-forest-200"}`}>
+                      <td className="py-3 pr-4">
+                        <span
+                          className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium border capitalize ${
+                            statusColors[o.status] || "bg-stone-100 text-stone-800"
+                          }`}
+                        >
                           {o.status}
                         </span>
+                      </td>
+                      <td className="py-3 text-right">
+                        <Link
+                          to={`/admin/orders?search=${o._id.slice(-6)}`}
+                          className="text-xs font-semibold text-emerald-800 hover:underline"
+                        >
+                          Manifest
+                        </Link>
                       </td>
                     </tr>
                   ))}
@@ -337,54 +489,81 @@ const AdminOverview = () => {
           )}
         </div>
 
-        {/* Low Stock Alerts (1 Column) */}
-        <div className="bg-white rounded-3xl p-6 border border-forest-100 shadow-soft">
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h2 className="font-display text-xl text-ink">Stock Watch</h2>
-              <p className="text-xs text-forest-700/60 mt-0.5">Pieces with ≤ 5 units remaining</p>
-            </div>
-            <Link to="/admin/products" className="text-xs font-semibold text-forest-700 hover:text-forest-900 underline">
-              Inventory →
-            </Link>
-          </div>
-
-          {stats.lowStock.length === 0 ? (
-            <div className="p-6 rounded-2xl bg-emerald-50/70 border border-emerald-200/60 text-center space-y-2">
-              <div className="w-9 h-9 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                </svg>
+        {/* Inventory Stock Watch (1 Column) */}
+        <div className="bg-white rounded-3xl p-6 border border-stone-200/80 shadow-soft flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="font-display text-lg font-bold text-stone-900">Stock Watch</h2>
+                <p className="text-xs text-stone-500">Low & out-of-stock jewellery alerts</p>
               </div>
-              <p className="text-xs font-semibold text-emerald-900">Inventory Healthy</p>
-              <p className="text-[11px] text-emerald-700/70">No pieces currently running low on stock.</p>
+              <Link to="/admin/inventory" className="text-xs font-semibold text-emerald-800 hover:underline">
+                Inventory →
+              </Link>
             </div>
-          ) : (
-            <div className="space-y-3">
-              {stats.lowStock.map((p) => (
-                <div key={p._id} className="p-3 rounded-2xl bg-forest-50/40 border border-forest-100 flex items-center gap-3">
-                  {p.image ? (
-                    <img src={p.image} alt={p.name} className="w-11 h-11 rounded-xl object-cover border border-forest-100 bg-sand/30 shrink-0" />
-                  ) : (
-                    <div className="w-11 h-11 rounded-xl bg-forest-100 flex items-center justify-center text-forest-700 shrink-0">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                      </svg>
+
+            {(!Array.isArray(stats?.lowStock) || stats.lowStock.length === 0) && (!Array.isArray(stats?.outOfStockList) || stats.outOfStockList.length === 0) ? (
+              <div className="p-6 rounded-2xl bg-emerald-50/60 border border-emerald-200 text-center space-y-2">
+                <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto">
+                  <CheckCircle className="w-5 h-5" />
+                </div>
+                <p className="text-xs font-semibold text-emerald-950">Inventory Healthy</p>
+                <p className="text-[11px] text-emerald-700">All jewellery items have sufficient stock units.</p>
+              </div>
+            ) : (
+
+              <div className="space-y-2.5">
+                {/* Out of Stock Alerts */}
+                {stats.outOfStockList?.map((p) => (
+                  <div key={p._id} className="p-2.5 rounded-2xl bg-red-50/60 border border-red-200 flex items-center gap-3">
+                    {p.image ? (
+                      <img src={p.image} alt={p.name} className="w-10 h-10 rounded-xl object-cover border border-red-200 shrink-0" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center text-red-600 shrink-0">
+                        <AlertTriangle className="w-4 h-4" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-stone-900 truncate">{p.name}</p>
+                      <p className="text-[10px] text-stone-500">{p.category || "Jewellery"}</p>
                     </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-ink truncate">{p.name}</p>
-                    <p className="text-[11px] text-forest-700/60">{p.category || "Jewellery"}</p>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-red-100 text-red-800 border border-red-200 shrink-0">
+                      Out of stock
+                    </span>
                   </div>
-                  <div className="text-right shrink-0">
-                    <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-100 text-red-700 border border-red-200">
+                ))}
+
+                {/* Low Stock Items */}
+                {stats.lowStock.map((p) => (
+                  <div key={p._id} className="p-2.5 rounded-2xl bg-amber-50/60 border border-amber-200 flex items-center gap-3">
+                    {p.image ? (
+                      <img src={p.image} alt={p.name} className="w-10 h-10 rounded-xl object-cover border border-amber-200 shrink-0" />
+                    ) : (
+                      <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center text-amber-700 shrink-0">
+                        <Package className="w-4 h-4" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold text-stone-900 truncate">{p.name}</p>
+                      <p className="text-[10px] text-stone-500">{p.category || "Jewellery"}</p>
+                    </div>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-200 shrink-0">
                       {p.stock} left
                     </span>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="pt-3 mt-4 border-t border-stone-100">
+            <Link
+              to="/admin/inventory"
+              className="btn-secondary w-full text-xs text-center !py-2 block"
+            >
+              Open Stock Adjustment Console
+            </Link>
+          </div>
         </div>
       </div>
     </div>

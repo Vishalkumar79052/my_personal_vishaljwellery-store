@@ -29,11 +29,17 @@ const ProductList = () => {
     api
       .get("/products", { params })
       .then((res) => {
-        setProducts(res.data.products);
-        setPages(res.data.pages);
+        setProducts(Array.isArray(res.data?.products) ? res.data.products : Array.isArray(res.data) ? res.data : []);
+        setPages(Number(res.data?.pages) || 1);
+      })
+      .catch((err) => {
+        console.warn("Could not load products:", err.message);
+        setProducts([]);
+        setPages(1);
       })
       .finally(() => setLoading(false));
   }, [keyword, category, sort, page]);
+
 
   const updateParam = (key, value) => {
     const next = new URLSearchParams(searchParams);
@@ -75,9 +81,10 @@ const ProductList = () => {
 
       {loading ? (
         <p className="text-forest-700/60">Loading products…</p>
-      ) : products.length === 0 ? (
+      ) : (!Array.isArray(products) || products.length === 0) ? (
         <p className="text-forest-700/60">No products found. Try a different search.</p>
       ) : (
+
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-6 gap-y-10">
           {products.map((p) => (
             <ProductCard key={p._id} product={p} />

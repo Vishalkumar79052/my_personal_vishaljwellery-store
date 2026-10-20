@@ -3,11 +3,37 @@ import Product from "../models/Product.js";
 // @desc Get all products (with search, filter, pagination)
 // @route GET /api/products
 export const getProducts = async (req, res) => {
-  const { keyword, category, minPrice, maxPrice, sort, page = 1, limit = 12 } = req.query;
+  const { keyword, category, minPrice, maxPrice, sort, page = 1, limit = 12, stockStatus, isActive } = req.query;
 
-  const filter = { isActive: true };
-  if (keyword) filter.$text = { $search: keyword };
-  if (category) filter.category = category;
+  const filter = {};
+  if (isActive !== undefined && isActive !== "all") {
+    filter.isActive = isActive === "true";
+  } else if (isActive === undefined) {
+    filter.isActive = true;
+  }
+
+  if (keyword) {
+    const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    filter.$or = [
+      { name: { $regex: escapedKeyword, $options: "i" } },
+      { category: { $regex: escapedKeyword, $options: "i" } },
+      { sku: { $regex: escapedKeyword, $options: "i" } },
+      { brand: { $regex: escapedKeyword, $options: "i" } },
+    ];
+  }
+
+  if (category && category !== "all") {
+    filter.category = category;
+  }
+
+  if (stockStatus === "out") {
+    filter.stock = { $lte: 0 };
+  } else if (stockStatus === "low") {
+    filter.stock = { $gt: 0, $lte: 5 };
+  } else if (stockStatus === "in") {
+    filter.stock = { $gt: 5 };
+  }
+
   if (minPrice || maxPrice) {
     filter.price = {};
     if (minPrice) filter.price.$gte = Number(minPrice);
@@ -18,6 +44,10 @@ export const getProducts = async (req, res) => {
   if (sort === "price_asc") sortOption = { price: 1 };
   if (sort === "price_desc") sortOption = { price: -1 };
   if (sort === "rating") sortOption = { rating: -1 };
+  if (sort === "stock_asc") sortOption = { stock: 1 };
+  if (sort === "stock_desc") sortOption = { stock: -1 };
+  if (sort === "name_asc") sortOption = { name: 1 };
+  if (sort === "name_desc") sortOption = { name: -1 };
 
   const pageNum = Math.max(1, Number(page));
   const limitNum = Math.max(1, Number(limit));

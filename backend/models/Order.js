@@ -5,8 +5,20 @@ const orderItemSchema = new mongoose.Schema(
     product: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true },
     name: String,
     image: String,
+    sku: String,
     price: Number,
     quantity: { type: Number, required: true, min: 1 },
+  },
+  { _id: false }
+);
+
+const statusHistorySchema = new mongoose.Schema(
+  {
+    status: { type: String, required: true },
+    changedAt: { type: Date, default: Date.now },
+    changedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    adminName: { type: String, default: "System" },
+    notes: { type: String, default: "" },
   },
   { _id: false }
 );
@@ -34,10 +46,17 @@ const orderSchema = new mongoose.Schema(
     paidAt: Date,
     status: {
       type: String,
-      enum: ["pending", "processing", "shipped", "delivered", "cancelled"],
+      enum: ["pending", "confirmed", "processing", "shipped", "delivered", "cancelled"],
       default: "pending",
     },
+    trackingNumber: { type: String, default: "" },
+    carrier: { type: String, default: "" },
+    notes: { type: String, default: "" },
+    confirmedAt: Date,
+    processingAt: Date,
+    shippedAt: Date,
     deliveredAt: Date,
+    statusHistory: [statusHistorySchema],
   },
   { timestamps: true }
 );

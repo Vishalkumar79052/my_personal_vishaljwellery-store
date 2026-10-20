@@ -3,16 +3,17 @@ import bcrypt from "bcryptjs";
 
 const addressSchema = new mongoose.Schema(
   {
-    fullName: String,
-    line1: String,
-    line2: String,
-    city: String,
-    state: String,
-    postalCode: String,
-    country: String,
-    phone: String,
+    fullName: { type: String, required: true },
+    line1: { type: String, required: true },
+    line2: { type: String, default: "" },
+    city: { type: String, required: true },
+    state: { type: String, default: "" },
+    postalCode: { type: String, required: true },
+    country: { type: String, default: "India" },
+    phone: { type: String, default: "" },
+    isDefault: { type: Boolean, default: false },
   },
-  { _id: false }
+  { timestamps: true }
 );
 
 const userSchema = new mongoose.Schema(
@@ -20,9 +21,12 @@ const userSchema = new mongoose.Schema(
     name: { type: String, required: true, trim: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     password: { type: String, required: true, minlength: 6 },
+    phone: { type: String, default: "" },
     role: { type: String, enum: ["user", "admin"], default: "user" },
     avatar: { type: String, default: "" },
     address: addressSchema,
+    addresses: [addressSchema],
+    wishlist: [{ type: mongoose.Schema.Types.ObjectId, ref: "Product" }],
     cart: [
       {
         product: { type: mongoose.Schema.Types.ObjectId, ref: "Product", required: true },

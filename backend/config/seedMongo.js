@@ -54,7 +54,18 @@ export const autoSeedMongoIfEmpty = async () => {
       console.log(`[MongoDB] Demo shopper user reactivated.`);
     }
 
-    // 3. Ensure Products are seeded if collection is empty
+    // 3. Ensure Products are seeded with authentic jewellery items
+    const legacyNames = [
+      "Solstice Running Shoes",
+      "Aurora Wireless Headphones",
+      "Fable Linen Throw Blanket",
+      "Terra Canvas Backpack",
+      "Meridian Ceramic Mug Set",
+      "Nomad Stainless Water Bottle",
+      "A",
+    ];
+    await Product.deleteMany({ name: { $in: legacyNames } });
+
     const productCount = await Product.countDocuments();
     if (productCount === 0) {
       console.log("[MongoDB] Products collection empty — seeding jewellery collection...");

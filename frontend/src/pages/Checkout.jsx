@@ -35,7 +35,7 @@ const Checkout = () => {
     try {
       const { data } = await api.post("/orders", { shippingAddress: address, paymentMethod });
       await clearCart();
-      navigate(`/dashboard/orders/${data._id}`, { state: { justPlaced: true } });
+      navigate(`/user/dashboard/orders/${data._id}`, { state: { justPlaced: true } });
     } catch (err) {
       setError(err.response?.data?.message || "Could not place order");
     } finally {
@@ -43,9 +43,10 @@ const Checkout = () => {
     }
   };
 
-  if (cart.length === 0) {
+  if (!Array.isArray(cart) || cart.length === 0) {
     return <div className="max-w-3xl mx-auto px-6 py-24 text-center text-forest-700/60">Your cart is empty.</div>;
   }
+
 
   return (
     <div className="max-w-5xl mx-auto px-6 py-12">

@@ -5,6 +5,7 @@ process.env.JWT_SECRET = "test_jwt_secret_min_32_characters_long_12345";
 import { describe, it, before, after } from "node:test";
 import assert from "node:assert/strict";
 import app from "../backend/server.js";
+import { computeOrderTimeline } from "../frontend/src/utils/orderTimeline.js";
 
 describe("Vishal Jewellery Store — Automated Integration Test Suite", () => {
   let server;
@@ -243,5 +244,295 @@ describe("Vishal Jewellery Store — Automated Integration Test Suite", () => {
       assert.equal(data.provider, "cloudinary", "Should upload to Cloudinary");
       assert.ok(data.url.includes("cloudinary.com"), "URL should be a Cloudinary CDN link");
     });
+
+    it("GET /api/admin/users should return users with order stats", async () => {
+      const res = await fetch(`${baseUrl}/api/admin/users`, {
+        headers: { Authorization: `Bearer ${adminToken}` },
+      });
+      assert.equal(res.status, 200);
+      const users = await res.json();
+      assert.ok(Array.isArray(users));
+      if (users.length > 0) {
+        assert.ok("orderCount" in users[0], "User should contain orderCount");
+        assert.ok("totalSpent" in users[0], "User should contain totalSpent");
+      }
+    });
+
+    it("PUT /api/admin/products/:id/stock should update stock with validation", async () => {
+      const res = await fetch(`${baseUrl}/api/admin/products/${demoProductId}/stock`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${adminToken}`,
+        },
+        body: JSON.stringify({ stock: 15 }),
+      });
+      assert.equal(res.status, 200);
+      const updated = await res.json();
+      assert.equal(updated.stock, 15);
+
+      // Validation check: negative stock should be rejected
+      const invalidRes = await fetch(`${baseUrl}/api/admin/products/${demoProductId}/stock`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${adminToken}`,
+        },
+        body: JSON.stringify({ stock: -5 }),
+      });
+      assert.equal(invalidRes.status, 400);
+    });
+  });
+
+  describe("6. Order Progress Timeline Synchronization & Milestone Verification", () => {
+    it("should show ONLY Order Placed as completed for pending orders", () => {
+      const pendingOrder = {
+        _id: "6ad67116c2c69ddd5b9f6a23",
+        status: "pending",
+        createdAt: new Date().toISOString(),
+      };
+
+      const timeline = computeOrderTimeline(pendingOrder);
+      assert.equal(timeline.length, 4);
+
+      // Stage 1: Order Placed
+      assert.equal(timeline[0].key, "placed");
+      assert.equal(timeline[0].isCompleted, true, "Order Placed MUST be completed");
+      assert.equal(timeline[0].isActive, false);
+
+      // Stage 2: Preparation
+      assert.equal(timeline[1].key, "processing");
+      assert.equal(timeline[1].isCompleted, false, "Preparation MUST NOT be complete for pending order");
+      assert.equal(timeline[1].isPending, true);
+
+      // Stage 3: Dispatch
+      assert.equal(timeline[2].key, "shipped");
+      assert.equal(timeline[2].isCompleted, false, "Dispatch MUST NOT be complete for pending order");
+      assert.equal(timeline[2].isPending, true);
+
+      // Stage 4: Delivered
+      assert.equal(timeline[3].key, "delivered");
+      assert.equal(timeline[3].isCompleted, false, "Delivered MUST NOT be complete for pending order");
+      assert.equal(timeline[3].isPending, true);
+
+      const completedStages = timeline.filter((s) => s.isCompleted);
+      assert.equal(completedStages.length, 1, "Only 1 completed stage must exist for pending order");
+    });
+
+    it("should mark preparation as in-progress and NOT complete for processing orders", () => {
+      const processingOrder = {
+        _id: "6ad67116c2c69ddd5b9f6a23",
+        status: "processing",
+        createdAt: new Date().toISOString(),
+        processingAt: new Date().toISOString(),
+      };
+
+      const timeline = computeOrderTimeline(processingOrder);
+      assert.equal(timeline[0].isCompleted, true);
+      assert.equal(timeline[1].isCompleted, false, "Preparation is in progress, not complete");
+      assert.equal(timeline[1].isActive, true, "Preparation is active");
+      assert.equal(timeline[2].isCompleted, false);
+      assert.equal(timeline[3].isCompleted, false);
+    });
+
+    it("should NOT mark dispatch as complete for shipped orders without tracking data", () => {
+      const shippedWithoutTracking = {
+        _id: "6ad67116c2c69ddd5b9f6a23",
+        status: "shipped",
+        trackingNumber: "",
+        carrier: "",
+        createdAt: new Date().toISOString(),
+      };
+
+      const timeline = computeOrderTimeline(shippedWithoutTracking);
+      assert.equal(timeline[0].isCompleted, true);
+      assert.equal(timeline[1].isCompleted, true, "Preparation completed before shipment");
+      assert.equal(timeline[2].isCompleted, false, "Dispatch MUST NOT be complete without tracking data");
+      assert.equal(timeline[2].isActive, true, "Dispatch is awaiting tracking");
+      assert.equal(timeline[3].isCompleted, false);
+    });
+
+    it("should mark dispatch as complete when supported by both shipped status AND tracking data", () => {
+      const shippedWithTracking = {
+        _id: "6ad67116c2c69ddd5b9f6a23",
+        status: "shipped",
+        trackingNumber: "TRK-BOUTIQUE-88392",
+        carrier: "Insured Armoured Logistics",
+        createdAt: new Date().toISOString(),
+        shippedAt: new Date().toISOString(),
+      };
+
+      const timeline = computeOrderTimeline(shippedWithTracking);
+      assert.equal(timeline[0].isCompleted, true);
+      assert.equal(timeline[1].isCompleted, true);
+      assert.equal(timeline[2].isCompleted, true, "Dispatch is complete with tracking data");
+      assert.equal(timeline[3].isCompleted, false, "Delivery is out for delivery, not complete");
+      assert.equal(timeline[3].isActive, true);
+    });
+
+    it("should mark delivery as complete only when status is delivered", () => {
+      const deliveredOrder = {
+        _id: "6ad67116c2c69ddd5b9f6a23",
+        status: "delivered",
+        trackingNumber: "TRK-BOUTIQUE-88392",
+        carrier: "Insured Armoured Logistics",
+        createdAt: new Date().toISOString(),
+        deliveredAt: new Date().toISOString(),
+      };
+
+      const timeline = computeOrderTimeline(deliveredOrder);
+      assert.equal(timeline[0].isCompleted, true);
+      assert.equal(timeline[1].isCompleted, true);
+      assert.equal(timeline[2].isCompleted, true);
+      assert.equal(timeline[3].isCompleted, true, "Delivery is complete for delivered status");
+      const completedStages = timeline.filter((s) => s.isCompleted);
+      assert.equal(completedStages.length, 4);
+    });
+
+    it("PUT /api/admin/orders/:id/status should synchronize milestones and return updated tracking", async () => {
+      // Find an order
+      const ordersRes = await fetch(`${baseUrl}/api/admin/orders`, {
+        headers: { Authorization: `Bearer ${adminToken}` },
+      });
+      assert.equal(ordersRes.status, 200);
+      const orders = await ordersRes.json();
+      if (orders.length > 0) {
+        let targetOrder = orders.find((o) => o.status !== "cancelled");
+        if (!targetOrder) {
+          await fetch(`${baseUrl}/api/admin/orders/${orders[0]._id}/status`, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${adminToken}`,
+            },
+            body: JSON.stringify({ status: "pending" }),
+          });
+          targetOrder = orders[0];
+        }
+
+        // Advance to shipped with tracking number
+        const updateRes = await fetch(`${baseUrl}/api/admin/orders/${targetOrder._id}/status`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${adminToken}`,
+          },
+          body: JSON.stringify({
+            status: "shipped",
+            trackingNumber: "TRK-TEST-77192",
+            carrier: "BlueDart Armoured Express",
+          }),
+        });
+
+        assert.equal(updateRes.status, 200);
+        const updated = await updateRes.json();
+        assert.equal(updated.status, "shipped");
+        assert.equal(updated.trackingNumber, "TRK-TEST-77192");
+        assert.equal(updated.carrier, "BlueDart Armoured Express");
+
+        // Verify timeline calculation on updated order
+        const timeline = computeOrderTimeline(updated);
+        assert.equal(timeline[2].isCompleted, true);
+        assert.equal(timeline[3].isCompleted, false);
+      }
+    });
+
+    it("should handle confirmed order status correctly in timeline", () => {
+      const confirmedOrder = {
+        _id: "6ad67116c2c69ddd5b9f6a23",
+        status: "confirmed",
+        createdAt: new Date().toISOString(),
+        confirmedAt: new Date().toISOString(),
+      };
+
+      const timeline = computeOrderTimeline(confirmedOrder);
+      assert.equal(timeline[0].isCompleted, true);
+      assert.equal(timeline[0].statusText, "Confirmed by Atelier");
+      assert.equal(timeline[1].isCompleted, false);
+      assert.equal(timeline[1].isPending, true);
+      assert.equal(timeline[2].isCompleted, false);
+      assert.equal(timeline[3].isCompleted, false);
+    });
+
+    it("PUT /api/admin/orders/:id/status should reject transitioning a cancelled order to delivered", async () => {
+      const ordersRes = await fetch(`${baseUrl}/api/admin/orders`, {
+        headers: { Authorization: `Bearer ${adminToken}` },
+      });
+      const orders = await ordersRes.json();
+      if (orders.length > 0) {
+        const order = orders[0];
+
+        // Cancel order first
+        await fetch(`${baseUrl}/api/admin/orders/${order._id}/status`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${adminToken}`,
+          },
+          body: JSON.stringify({ status: "cancelled" }),
+        });
+
+        // Try transitioning directly to delivered - MUST BE REJECTED with 400
+        const invalidTransitionRes = await fetch(`${baseUrl}/api/admin/orders/${order._id}/status`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${adminToken}`,
+          },
+          body: JSON.stringify({ status: "delivered" }),
+        });
+
+        assert.equal(invalidTransitionRes.status, 400);
+        const data = await invalidTransitionRes.json();
+        assert.ok(data.message.includes("cancelled"), "Should explain why transition was rejected");
+
+        // Re-open order to pending to maintain database cleanliness for repeatable tests
+        await fetch(`${baseUrl}/api/admin/orders/${order._id}/status`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${adminToken}`,
+          },
+          body: JSON.stringify({ status: "pending" }),
+        });
+      }
+    });
+
+    it("PUT /api/admin/orders/:id/status should update payment status independently from fulfillment", async () => {
+      const ordersRes = await fetch(`${baseUrl}/api/admin/orders`, {
+        headers: { Authorization: `Bearer ${adminToken}` },
+      });
+      const orders = await ordersRes.json();
+      if (orders.length > 0) {
+        const order = orders[0];
+
+        // Mark as paid
+        const payRes = await fetch(`${baseUrl}/api/admin/orders/${order._id}/status`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${adminToken}`,
+          },
+          body: JSON.stringify({ isPaid: true }),
+        });
+        assert.equal(payRes.status, 200);
+        const paidOrder = await payRes.json();
+        assert.equal(paidOrder.isPaid, true);
+
+        // Mark as unpaid
+        const unpayRes = await fetch(`${baseUrl}/api/admin/orders/${order._id}/status`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${adminToken}`,
+          },
+          body: JSON.stringify({ isPaid: false }),
+        });
+        assert.equal(unpayRes.status, 200);
+        const unpaidOrder = await unpayRes.json();
+        assert.equal(unpaidOrder.isPaid, false);
+      }
+    });
   });
 });
+
