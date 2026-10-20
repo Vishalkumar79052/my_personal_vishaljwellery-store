@@ -218,12 +218,12 @@ const AdminSettings = () => {
           <div className="bg-white rounded-3xl p-6 border border-stone-200/80 shadow-soft space-y-4">
             <div className="flex items-center gap-2 pb-2 border-b border-stone-100">
               <Phone className="w-4 h-4 text-emerald-900" />
-              <h3 className="font-display font-bold text-base text-stone-900">Showroom & Concierge Contact</h3>
+              <h3 className="font-display font-bold text-base text-stone-900">Showroom & Contact</h3>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
               <div>
-                <label className="block font-semibold text-stone-700 mb-1">Concierge Email</label>
+                <label className="block font-semibold text-stone-700 mb-1">Email</label>
                 <input
                   type="email"
                   value={settings.contactEmail}
@@ -233,7 +233,7 @@ const AdminSettings = () => {
               </div>
 
               <div>
-                <label className="block font-semibold text-stone-700 mb-1">Concierge Phone / WhatsApp</label>
+                <label className="block font-semibold text-stone-700 mb-1"> Phone / WhatsApp</label>
                 <input
                   type="text"
                   value={settings.contactPhone}
@@ -303,7 +303,7 @@ const AdminSettings = () => {
             <div className="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-900 space-y-1">
               <p className="font-bold">Security Note</p>
               <p className="text-[11px] text-emerald-800/80">
-                Cloudinary API keys, database credentials, and JWT secrets are stored in secure backend environment secrets and are never exposed in settings forms.
+
               </p>
             </div>
           </div>
