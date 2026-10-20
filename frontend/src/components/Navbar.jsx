@@ -41,19 +41,27 @@ const Navbar = () => {
   };
 
   return (
-    <header className="sticky top-0 z-40 bg-[#FAF9F6]/95 backdrop-blur-md border-b border-stone-200/80 shadow-2xs font-sans">
+    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-stone-200/80 shadow-xs font-sans">
+      {/* Top Luxury Announcement Ribbon */}
+      <div className="bg-gradient-to-r from-forest-950 via-forest-900 to-stone-950 text-amber-200/90 py-1.5 px-4 text-center text-[10px] sm:text-[11px] font-medium tracking-wider border-b border-amber-400/20">
+        <div className="max-w-7xl mx-auto flex items-center justify-center gap-2">
+          <Sparkles className="w-3 h-3 text-amber-400" />
+          <span>Complimentary Insured Armoured Shipping on Certified Orders | BIS 916 Hallmarked Gold & Natural Solitaires</span>
+        </div>
+      </div>
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3.5 flex items-center justify-between gap-4">
         {/* Brand Logo */}
-        <Link to="/" className="flex items-center gap-2 group shrink-0">
-          <div className="w-8 h-8 rounded-full bg-emerald-950 text-amber-300 flex items-center justify-center font-display font-bold text-sm border border-amber-300/40 shadow-2xs">
+        <Link to="/" className="flex items-center gap-2.5 group shrink-0">
+          <div className="w-9 h-9 rounded-full bg-forest-950 text-amber-300 flex items-center justify-center font-editorial font-bold text-base border border-amber-300/40 shadow-xs group-hover:scale-105 transition-transform">
             VJ
           </div>
           <div className="flex flex-col">
-            <span className="font-display text-lg sm:text-xl font-bold tracking-tight text-emerald-950 group-hover:text-amber-800 transition-colors">
+            <span className="font-editorial text-xl sm:text-2xl font-bold tracking-tight text-forest-950 group-hover:text-gold-700 transition-colors leading-tight">
               Vishal Jewellery
             </span>
-            <span className="text-[9px] tracking-widest uppercase font-semibold text-amber-700 -mt-1 hidden sm:block">
-              High Jewellery & Solitaires
+            <span className="text-[9px] font-cinzel tracking-widest uppercase font-semibold text-gold-700 -mt-0.5 hidden sm:block">
+              Haute Joaillerie & Solitaires
             </span>
           </div>
         </Link>
